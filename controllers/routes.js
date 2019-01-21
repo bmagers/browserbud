@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../models");
+const passport = require("passport");
 
 router.get("/test/:user", function(req, res) {
   db.User.find({
@@ -31,7 +32,7 @@ router.post("/addPage", function(req, res) {
   });
 });
 
-router.post("/addColumn", function(req, res) {
+router.get("/addColumn", function(req, res) {
   var data = {
     stackOrder: 1
   };
@@ -70,6 +71,38 @@ router.post("/addLink/:url/:name", function(req, res) {
   .catch(function(err) {
     console.log(err.message);
   });
+});
+
+// login
+router.post("/login", passport.authenticate("local", {
+  successRedirect: "/",
+  failureRedirect: "/login",
+  failureFlash: true
+}));
+
+//register
+router.post("/register", (req, res, next) => {
+  console.log("posted in route");
+  const { username, password } = req.body;
+  db.User.create({ username, password })
+  .then(user => {
+    req.login(user, error => {
+      if (error) next(error);
+      else res.redirect("/");
+    });
+  })
+  .catch(error => {
+    if (error.name === "ValidationError") {
+      req.flash("Sorry, that username is already taken.");
+      res.redirect("/register");
+    } else next(error);
+  });
+});
+
+// logout
+router.all("/logout", function(req, res) {
+  req.logout();
+  res.redirect("/login");
 });
 
 module.exports = router;

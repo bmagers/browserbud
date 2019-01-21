@@ -1,14 +1,17 @@
 import React from "react";
 import ReactDOM from "react-dom";
+// import Login from "./components/Login";
+import Register from "./components/Register";
 
-class App extends React.Component {
+class BrowserBud extends React.Component {
   render() {
     return (
-      <div className="App">
-        <h1>BrowserBud!</h1>
+      <div className="BrowserBud">
+        <h1>BrowserBud</h1>
+        <Register />
       </div>
     )
   }
 }
 
-ReactDOM.render(<App />, document.getElementById("root"));
+ReactDOM.render(<BrowserBud />, document.getElementById("root"));

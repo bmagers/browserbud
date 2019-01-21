@@ -1,46 +1,24 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-const bcrypt = require('bcryptjs');
-mongoose.promise = Promise;
+const uniqueValidator = require("mongoose-unique-validator");
+const bcrypt = require("bcrypt");
 
-// Define userSchema
-const userSchema = new Schema({
-	local: {
-		email: { type: String, unique: true, required: true },
-		password: { type: String, unique: false, required: true }
-	},
-	google: {
-		googleId: { type: String, required: false }
-	},
-	pages: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Page"
-    }
-  ]
+const UserSchema = new Schema({
+  username: { type: String, required: true, unique: true },
+  passwordHash: { type: String, required: true },
+  pages: [ { type: Schema.Types.ObjectId, ref: "Page" } ]
 });
 
-// Define schema methods
-userSchema.methods = {
-	checkPassword: function(inputPassword) {
-		return bcrypt.compareSync(inputPassword, this.local.password);
-	},
-	hashPassword: plainTextPassword => {
-		return bcrypt.hashSync(plainTextPassword, 10);
-	}
+UserSchema.plugin(uniqueValidator);
+
+UserSchema.methods.validPassword = function(password) {
+  return bcrypt.compareSync(password, this.passwordHash);
 };
 
-// Define hooks for pre-saving
-userSchema.pre('save', function(next) {
-	if (!this.local.password) {
-		console.log('=======NO PASSWORD PROVIDED=======');
-		next();
-	} else {
-		this.local.password = this.hashPassword(this.local.password);
-		next();
-	}
+UserSchema.virtual("password").set(function(value) {
+  this.passwordHash = bcrypt.hashSync(value, 12);
 });
 
-// Create reference to User & export
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model("User", UserSchema);
+
 module.exports = User;
